@@ -1,0 +1,37 @@
+{
+  "name": "manageit-backend",
+  "version": "1.0.0",
+  "description": "This is the backend for Manageit",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "ts-node --esm src/index.ts",
+    "test": "node index.ts",
+    "build": "tsc",
+    "dev": "nodemon src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arghyahub/Manageit-Backend.git"
+  },
+  "keywords": [
+    "node",
+    "nodejs",
+    "express",
+    "typescript"
+  ],
+  "author": "Arghya Das",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Arghyahub/Manageit-Backend/issues"
+  },
+  "homepage": "https://github.com/Arghyahub/Manageit-Backend#readme",
+  "devDependencies": {
+    "@types/node": "^20.8.6",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "mongoose": "^7.6.2"
+  }
+}
