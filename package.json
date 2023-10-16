@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "description": "This is the backend for Manageit",
   "main": "index.js",
-  "type": "module",
+  
   "scripts": {
     "start": "ts-node --esm src/index.ts",
     "test": "node index.ts",
     "build": "tsc",
-    "dev": "nodemon src/index.ts"
+    "dev": "nodemon --watch src src/index.ts"
   },
   "repository": {
     "type": "git",
