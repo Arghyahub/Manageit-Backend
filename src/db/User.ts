@@ -1,15 +1,5 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
-import { projectType, chatToType } from '../types';
-
-export interface IUser extends Document {
-  name: string;
-  role: string;
-  email: string;
-  passwd: string;
-  projects: projectType[];
-  organizationID: string;
-  chatTo: chatToType[];
-}
+import mongoose, { Model, Schema } from 'mongoose';
+import { IUser } from '../types';
 
 const userSchema: Schema<IUser> = new Schema({
   name: { type: String, required: true },

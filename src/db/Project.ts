@@ -1,13 +1,5 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
-import { IUser } from './User';
-import { ITask } from './Task';
-
-export interface IProject extends Document {
-    name: string,
-    desc: string,
-    tasks: ITask[],
-    users: IUser[]
-}
+import mongoose, { Model, Schema } from 'mongoose';
+import { IProject } from '../types';
 
 const projectSchema: Schema<IProject> = new Schema({
     name: { type: String, required: true },

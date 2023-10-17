@@ -1,15 +1,5 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
-import { IUser } from './User';
-
-export interface ITask extends Document {
-    name: string;
-    description: string;
-    status: string;
-    assignedBy: IUser;
-    assignedTo: IUser[];    /* Task can be assigned to more than one user*/
-    createdBy: IUser;
-    deadline: Date;
-}
+import mongoose, { Model, Schema } from 'mongoose';
+import { ITask } from "../types";
 
 const taskSchema: Schema<ITask> = new Schema({
     name: { type: String, required: true },
