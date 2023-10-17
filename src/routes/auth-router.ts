@@ -7,15 +7,15 @@ import { IUser } from "../types";
 const router = Router();
 const secret = process.env.SECRET || "";
 
-// Todo: Signup route for organization/owner
+// Todo: Implement signup for new users invited by organisation and (add the new userId in orgDB: users[id])
 
 // For setting req.user as user, otherwise ts shows error as it can of any type
-interface CustomRequest extends Request {
+interface RequestWithUser extends Request {
     user?: IUser;
 }
 
 // Basic login route for admin/user
-router.route("/login").post(async (req: CustomRequest, res: Response) => {
+router.route("/login").post(async (req: RequestWithUser, res: Response) => {
     const { email, passwd } = req.body;
     if (!email || !passwd) {
         return res.status(400).json({ msg: "Email or password missing", token: null });
@@ -34,10 +34,9 @@ router.route("/login").post(async (req: CustomRequest, res: Response) => {
         const token = jwt.sign({ id: user._id }, secret);
         req.user = user;
 
-        return res.status(200).json({ msg: "Login successful", token: token, user });
-    } catch (err) {
-        console.error("Error:", err);
-        return res.status(500).json({ msg: "Internal server error", token: null });
+        return res.status(200).json({ msg: "Login successful", token: token, role: user.role });
+    } catch (error) {
+        return res.status(500).json({ msg: "Internal server error", token: null, error });
     }
 });
 

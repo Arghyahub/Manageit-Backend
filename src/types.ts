@@ -1,6 +1,6 @@
-import { Document } from 'mongoose';
-import IUser from './db/User';
-import ITask from './db/Task';
+import { Document } from "mongoose";
+import IUser from "./db/User";
+import ITask from "./db/Task";
 
 type Role = "admin" | "user";
 
@@ -36,28 +36,29 @@ export interface IUser extends Document {
     role: Role;
     email: string;
     passwd: string;
-    projects: projectType[];
+    projects?: projectType[];
     orgId: orgType;
-    chatTo: chatToType[];
+    chatTo?: chatToType[];
 }
 
 // Interface for Tasks
 export interface ITask extends Document {
     name: string;
     desc: string;
-    status: string;
-    assignedBy: userType;
-    assignedTo: userType[];    /* Task can be assigned to more than one user*/
+    projectId: string,
+    status?: string;
+    assignedBy?: userType;
+    assignedTo?: userType[];    /* Task can be assigned to more than one user*/
     createdBy: userType;
-    deadline: Date;
+    deadline?: Date;
 }
 
 // Interface for Project
 export interface IProject extends Document {
     name: string,
     desc: string,
-    tasks: taskType[],
-    users: userType[]
+    tasks?: taskType[],
+    users?: userType[]
 }
 
 // Interface for Organisation
@@ -65,6 +66,6 @@ export interface IOrganisation extends Document {
     name: string,
     email: string,
     passwd: string,
-    projects: projectType[],
-    users: userType[]
+    projects?: projectType[],
+    users?: userType[]
 }
