@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
       "target": "ES6",                     // The ECMAScript version you are targeting
-      "module": "NodeNext",                // The module system for Node.js
+      "module": "CommonJS",                // The module system for Node.js
       "outDir": "./dist",                  // The output directory for compiled files
       "rootDir": "./src",                  // The root directory of your source files
       "strict": true,                      // Enable strict type checking
@@ -35,7 +35,7 @@
   
       "incremental": true,                 // Use incremental compilation
       "tsBuildInfoFile": "./dist/.tsbuildinfo", // Path to the build info file for incremental builds
-      "moduleResolution": "nodenext",
+      "moduleResolution": "Node",
       // "allowImportingTsExtensions": true
     },
     "include": ["src/**/*.ts"],
