@@ -2,8 +2,9 @@ import mongoose, { Model, Schema } from 'mongoose';
 import { ITask } from "../types";
 
 const taskSchema: Schema<ITask> = new Schema({
+    _id: { type: String, required: true },
     name: { type: String, required: true },
-    description: { type: String, required: true },
+    desc: { type: String, required: true },
     status: { type: String, required: false },
     assignedBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
     assignedTo: [{ type: Schema.Types.ObjectId, ref: 'User' }],

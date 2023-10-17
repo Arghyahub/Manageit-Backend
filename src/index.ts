@@ -11,9 +11,12 @@ app.use(cors());
 import authRoutes from "./routes/auth-router";
 import taskRoutes from "./routes/task-router";
 import projectRoutes from "./routes/project-router";
+import orgRoutes from "./routes/org-router";
+
 app.use("/auth", authRoutes)
 app.use("/task", taskRoutes)
 app.use("/project", projectRoutes);
+app.use("/org", orgRoutes);
 
 // Connect to database
 import connectDB from "./db/index";
