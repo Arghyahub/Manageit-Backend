@@ -15,7 +15,7 @@ interface RequestWithUser extends Request {
 
 // /auth/signup: Signup for new users invited by the org
 router.route("/signup").post(async (req: RequestWithUser, res: Response) => {
-    const { email } = req.body;
+    const { name, email, orgId } = req.body;
     if (!email) {
         return res.status(400).json({ msg: "Please enter correct email!" });
     }
@@ -30,18 +30,20 @@ router.route("/signup").post(async (req: RequestWithUser, res: Response) => {
         if (orgCount > 0) {
             return res.status(409).json({ msg: "User already exists as an organization", token: null });
         }
+
+        // Creating a new user
         const passwd = await bcrypt.hash(email, 10);
         const newUser: IUser = new User({
-            name: req.body.name,
+            name: name,
             email: email,
             passwd: passwd,
             role: req.body.role || "user",
-            orgId: req.body.orgId
+            orgId: orgId
         })
         const savedUser = await newUser.save();
 
         // Adding the user id in the array inside OrganisationDB
-        await Organisation.findByIdAndUpdate(req.body.orgId, { $push: { users: savedUser._id } })
+        await Organisation.findByIdAndUpdate(orgId, { $push: { users: savedUser._id } })
         return res.status(201).json({ msg: "User created successfully" });
     } catch (error) {
         return res.status(500).json({ msg: "Internal Server Error", error });
@@ -56,11 +58,13 @@ router.route("/login").post(async (req: RequestWithUser, res: Response) => {
     }
 
     try {
+        // Checking if user does not exist
         const user = await User.findOne({ email: email });
         if (!user) {
             return res.status(404).json({ msg: "User not found", token: null });
         }
 
+        // Checking if the password is valid
         const passValid = await bcrypt.compare(passwd, user.passwd);
         if (!passValid) {
             return res.status(401).json({ msg: "Incorrect password", token: null });

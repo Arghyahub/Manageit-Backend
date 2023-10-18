@@ -5,6 +5,7 @@ const projectSchema: Schema<IProject> = new Schema({
     name: { type: String, required: true },
     desc: { type: String, required: true },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    date: { type: Date, default: Date.now, required: true },
     orgId: { type: Schema.Types.ObjectId, ref: 'Organisation', required: true },
     users: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     tasks: [{ type: Schema.Types.ObjectId, ref: 'Task' }]

@@ -24,33 +24,42 @@ export interface taskType {
     taskId: Types.ObjectId
 }
 
+// Comments interface for Tasks
+export interface commentType extends Document {
+    userName: string,
+    comment: string,
+    timestamp: Date,
+}
+
 export interface chatToType {
-    chatId: string
+    chatId: string,
     chatName: string
 }
 
 
 // Interface for User (admin and normal user)
 export interface IUser extends Document {
-    name: string;
-    role: Role;
-    email: string;
-    passwd: string;
-    projects?: projectType[];
-    orgId: orgType;
-    chatTo?: chatToType[];
+    name: string,
+    role: Role,
+    email: string,
+    passwd: string,
+    projects?: projectType[],
+    orgId: orgType,
+    chatTo?: chatToType[],
 }
 
 // Interface for Tasks
 export interface ITask extends Document {
-    name: string;
-    desc: string;
+    name: string,
+    desc: string,
     projectId: projectType,
     status?: string;
     assignedBy?: userType;
-    assignedTo?: userType[];    /* Task can be assigned to more than one user*/
-    createdBy: userType;
-    deadline?: Date;
+    assignedTo?: userType[],    /* Task can be assigned to more than one user*/
+    createdBy: userType,
+    date: Date,
+    deadline?: Date,
+    comments?: commentType[]
 }
 
 // Interface for Project
@@ -58,7 +67,8 @@ export interface IProject extends Document {
     name: string,
     desc: string,
     createdBy: userType,
-    orgId: orgType
+    date: Date,
+    orgId: orgType,
     tasks?: taskType[],
     users?: userType[]
 }

@@ -10,6 +10,12 @@ const taskSchema: Schema<ITask> = new Schema({
     assignedTo: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     deadline: { type: Date, required: false },
+    date: { type: Date, default: Date.now, required: true },
+    comments: [{
+        userName: { type: String, required: true },
+        comment: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now, required: true }
+    }]
 });
 
 const Task: Model<ITask> = mongoose.model<ITask>('Task', taskSchema);
