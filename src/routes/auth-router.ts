@@ -43,7 +43,11 @@ router.route("/signup").post(async (req: RequestWithUser, res: Response) => {
         const savedUser = await newUser.save();
 
         // Adding the user id in the array inside OrganisationDB
-        await Organisation.findByIdAndUpdate(orgId, { $push: { users: savedUser._id } })
+        const saved = await Organisation.findByIdAndUpdate(orgId, { $push: { users: savedUser._id } })
+        if (!saved) {
+            await User.deleteOne({ _id: savedUser._id });
+            return res.status(404).json({ msg: "Organisation not found, user can't be created!" });
+        }
         return res.status(201).json({ msg: "User created successfully" });
     } catch (error) {
         return res.status(500).json({ msg: "Internal Server Error", error });

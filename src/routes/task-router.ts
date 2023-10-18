@@ -2,26 +2,24 @@ import { Router, Request, Response } from "express";
 import Task from "../db/Task";
 import Project from "../db/Project";
 import { ITask, commentType } from "../types";
+import checkAdmin from "../middlewares/adminAuth";
 
 const router = Router();
 
 // /task: Post route for creating new tasks
-router.route("/").post(async (req: Request, res: Response) => {
+router.route("/").post(checkAdmin, async (req: Request, res: Response) => {
     try {
-        if (req.body.projectId) {
-            const task: ITask = req.body;
-            const newTask = new Task(task);
-            await newTask.save();
+        const task: ITask = req.body;
+        const newTask = new Task(task);
+        const saveTask = await newTask.save();
 
-            // Save the task in the project that it is part of
-            const created = await Project.findByIdAndUpdate(newTask.projectId, { $push: { tasks: newTask._id } });
-            if (created) {
-                return res.status(201).json({ msg: "Successfully created the task!", task: newTask });
-            } else {
-                return res.status(404).json({ msg: "Task not found" });
-            }
+        // Save the task in the project that it is part of
+        const created = await Project.findByIdAndUpdate(newTask.projectId, { $push: { tasks: saveTask._id } });
+        if (!created) {
+            await Task.deleteOne({ _id: saveTask._id })
+            return res.status(404).json({ msg: "Project not found, task can't be created!" });
         } else {
-            return res.status(404).json({ msg: "Error: Project not found!" });
+            return res.status(201).json({ msg: "Successfully created the task!", task: newTask });
         }
     } catch (error) {
         return res.status(500).json({ msg: "Internal Server Error", error });
@@ -40,7 +38,7 @@ router.route("/:taskId")
             return res.status(404).json({ msg: "Task not found", error });
         }
     })
-    .put(async (req: Request, res: Response) => {
+    .put(checkAdmin, async (req: Request, res: Response) => {
         const id = req.params.taskId;
         try {
             const updatedTask = await Task.findByIdAndUpdate(id, req.body, { new: true })
@@ -53,7 +51,7 @@ router.route("/:taskId")
             return res.status(500).json({ msg: "Internal Server Error!", error });
         }
     })
-    .delete(async (req: Request, res: Response) => {
+    .delete(checkAdmin, async (req: Request, res: Response) => {
         const id = req.params.taskId;
         try {
             const task = await Task.findById(id);

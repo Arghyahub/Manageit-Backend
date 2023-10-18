@@ -3,15 +3,14 @@ import Project from "../db/Project";
 import User from "../db/User";
 import Organisation from "../db/Organisation";
 import { IProject } from "../types";
+import checkAdmin from "../middlewares/adminAuth";
 
 const router = Router();
 
-// Todo: Make a middleware to check user is part of project to allow Get request and for Post, Put, Delete route check if user has admin role
 // Todo: Implement pagination for get request for users and tasks array
 
-
 // /project: Route for creating new projects
-router.route("/").post(async (req: Request, res: Response) => {
+router.route("/").post(checkAdmin, async (req: Request, res: Response) => {
     try {
         const project: IProject = req.body;
         const newProject = new Project(project);
@@ -20,7 +19,8 @@ router.route("/").post(async (req: Request, res: Response) => {
         // Save the project Id in the orgDB 
         const updated = await Organisation.findByIdAndUpdate(req.body.orgId, { $push: { projects: savedProject._id } });
         if (!updated) {
-            return res.status(404).json({ msg: "User/Organisation is not found!" });
+            await Project.deleteOne({ _id: savedProject._id });
+            return res.status(404).json({ msg: "User/Organisation is not found, project can't be created!" });
         }
         return res.status(201).json({ msg: "Successfully created the project!", project: savedProject });
     } catch (error) {
@@ -39,7 +39,7 @@ router.route("/:projectId")
             return res.status(404).json({ msg: "Project not found", error });
         }
     })
-    .put(async (req: Request, res: Response) => {
+    .put(checkAdmin, async (req: Request, res: Response) => {
         const id = req.params.projectId;
         try {
             const updated = await Project.findByIdAndUpdate(id, req.body, { new: true })
@@ -52,7 +52,7 @@ router.route("/:projectId")
             return res.status(500).json({ msg: "Internal Server Error!", error });
         }
     })
-    .delete(async (req: Request, res: Response) => {
+    .delete(checkAdmin, async (req: Request, res: Response) => {
         const id = req.params.projectId;
         try {
             const project = await Project.findById(id);
@@ -82,7 +82,7 @@ router.route("/:projectId/users").get(async (req: Request, res: Response) => {
     } catch (error) {
         return res.status(404).json({ msg: "Project not found!", error });
     }
-}).post(async (req: Request, res: Response) => {
+}).post(checkAdmin, async (req: Request, res: Response) => {
     const id = req.params.projectId;
     const userId = req.body.userId;
     try {
