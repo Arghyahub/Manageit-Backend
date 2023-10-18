@@ -5,13 +5,15 @@ import { ITask } from "../types";
 
 const router = Router();
 
-// Post route for creating new tasks
+// /task: Post route for creating new tasks
 router.route("/").post(async (req: Request, res: Response) => {
     try {
         if (req.body.projectId) {
-            const task: ITask = req.body as ITask;
+            const task: ITask = req.body;
             const newTask = new Task(task);
             await newTask.save();
+
+            // Save the task in the project that it is part of
             await Project.findByIdAndUpdate(newTask.projectId, { $push: { tasks: newTask._id } });
             return res.status(201).json({ msg: "Successfully created the task!", task: newTask });
         } else {
@@ -23,7 +25,7 @@ router.route("/").post(async (req: Request, res: Response) => {
 });
 
 
-// Read, Update, Delete a specific task
+// /task/:taskId: Read, Update, Delete a specific task
 router.route("/:taskId")
     .get(async (req: Request, res: Response) => {
         const id = req.params.taskId;
@@ -50,7 +52,13 @@ router.route("/:taskId")
     .delete(async (req: Request, res: Response) => {
         const id = req.params.taskId;
         try {
-            const deletedTask = await Task.findByIdAndDelete(id);
+            const task = await Task.findById(id);
+
+            // Remove task from the project it was part of
+            await Project.updateOne({ _id: task?.projectId }, { $pull: { tasks: task?._id } })
+
+            // Delete the task
+            const deletedTask = await Task.deleteOne({ _id: task?._id });
             if (deletedTask) {
                 return res.status(200).json({ msg: "Successfully deleted!" });
             } else {

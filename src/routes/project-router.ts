@@ -1,39 +1,34 @@
 import { Router, Request, Response } from "express";
 import Project from "../db/Project";
-import { IProject } from "../types";
+import User from "../db/User";
 import Organisation from "../db/Organisation";
+import { IProject } from "../types";
 
 const router = Router();
-
-// Interface for req.user using orgId
-interface CustomRequest extends Request {
-    user?: { orgId: string };
-}
 
 // Todo: Make a middleware to check user is part of project to allow Get request and for Post, Put, Delete route check if user has admin role
 // Todo: Implement pagination for get request for users and tasks array
 
-// todo: implement a route for adding users in the project. In projectDB: users[id]
 
-router.route("/").post(async (req: CustomRequest, res: Response) => {
+// /project: Route for creating new projects
+router.route("/").post(async (req: Request, res: Response) => {
     try {
-        if (req.user && req.user.orgId) {
-            const project: IProject = req.body;
-            const newProject = new Project(project);
-            const savedProject = await newProject.save();
-            const orgId = req.user.orgId;
-            await Organisation.findByIdAndUpdate(orgId, { $push: { projects: savedProject._id } });
-            return res.status(201).json({ msg: "Successfully created the project!", project: savedProject });
-        } else {
+        const project: IProject = req.body;
+        const newProject = new Project(project);
+        const savedProject = await newProject.save();
+
+        // Save the project Id in the orgDB 
+        const updated = await Organisation.findByIdAndUpdate(req.body.orgId, { $push: { projects: savedProject._id } });
+        if (!updated) {
             return res.status(404).json({ msg: "User/Organisation is not found!" });
         }
+        return res.status(201).json({ msg: "Successfully created the project!", project: savedProject });
     } catch (error) {
-        console.error("Error while creating the project:", error);
         return res.status(500).json({ msg: "Internal Server Error", error: error });
     }
 });
 
-// Route for Read, Update, Delete in a specific project
+// /project/:projectId Route for Read, Update, Delete in a specific project
 router.route("/:projectId")
     .get(async (req: Request, res: Response) => {
         const id = req.params.projectId;
@@ -60,7 +55,13 @@ router.route("/:projectId")
     .delete(async (req: Request, res: Response) => {
         const id = req.params.projectId;
         try {
-            const deletedProject = await Project.findByIdAndDelete(id);
+            const project = await Project.findById(id);
+
+            // Removing project Id from organisation it was part of
+            await Organisation.updateOne({ _id: project?.orgId }, { $pull: { projects: project?._id } })
+
+            // Deleting the project from its model
+            const deletedProject = await Project.deleteOne({ _id: project?._id })
             if (deletedProject) {
                 return res.status(200).json({ msg: "Successfully deleted!" });
             } else {
@@ -70,5 +71,29 @@ router.route("/:projectId")
             return res.status(500).json({ msg: "Internal Server Error!", error });
         }
     });
+
+
+// Fetching and adding users using projectId
+router.route("/:projectId/users").get(async (req: Request, res: Response) => {
+    const id = req.params.projectId;
+    try {
+        const project = await Project.findById(id).select("users");
+        return res.status(200).json({ msg: "Successfully fetched the user's list", users: project?.users });
+    } catch (error) {
+        return res.status(404).json({ msg: "Project not found!", error });
+    }
+}).post(async (req: Request, res: Response) => {
+    const id = req.params.projectId;
+    const userId = req.body.userId;
+    try {
+        // Add user id in projectDB
+        await Project.findByIdAndUpdate(id, { $push: { users: userId } })
+        // Add project id in UserDB
+        await User.findByIdAndUpdate(userId, { $push: { projects: id } })
+        return res.status(201).json({ msg: "Successfully added the user in project" });
+    } catch (error) {
+        return res.status(500).json({ msg: "Server Error!", error });
+    }
+});
 
 export default router;

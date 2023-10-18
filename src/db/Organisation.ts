@@ -2,7 +2,6 @@ import mongoose, { Model, Schema } from "mongoose";
 import { IOrganisation } from "../types";
 
 const orgSchema: Schema<IOrganisation> = new Schema({
-    _id: { type: String, required: true },
     name: { type: String, required: true },
     email: { type: String, required: true },
     passwd: { type: String, required: true },

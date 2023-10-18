@@ -3,18 +3,52 @@ import User from "../db/User";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { IUser } from "../types";
+import Organisation from "../db/Organisation";
 
 const router = Router();
 const secret = process.env.SECRET || "";
-
-// Todo: Implement signup for new users invited by organisation and (add the new userId in orgDB: users[id])
 
 // For setting req.user as user, otherwise ts shows error as it can of any type
 interface RequestWithUser extends Request {
     user?: IUser;
 }
 
-// Basic login route for admin/user
+// /auth/signup: Signup for new users invited by the org
+router.route("/signup").post(async (req: RequestWithUser, res: Response) => {
+    const { email } = req.body;
+    if (!email) {
+        return res.status(400).json({ msg: "Please enter correct email!" });
+    }
+    try {
+        // Checking if user with that email already exists
+        const userCount = await User.countDocuments({ email: email });
+        if (userCount > 0) {
+            return res.status(409).json({ msg: "User already exists with that email!", token: null });
+        }
+        // Checking if user exists as organisation
+        const orgCount = await Organisation.countDocuments({ email: email });
+        if (orgCount > 0) {
+            return res.status(409).json({ msg: "User already exists as an organization", token: null });
+        }
+        const passwd = await bcrypt.hash(email, 10);
+        const newUser: IUser = new User({
+            name: req.body.name,
+            email: email,
+            passwd: passwd,
+            role: req.body.role || "user",
+            orgId: req.body.orgId
+        })
+        const savedUser = await newUser.save();
+
+        // Adding the user id in the array inside OrganisationDB
+        await Organisation.findByIdAndUpdate(req.body.orgId, { $push: { users: savedUser._id } })
+        return res.status(201).json({ msg: "User created successfully" });
+    } catch (error) {
+        return res.status(500).json({ msg: "Internal Server Error", error });
+    }
+});
+
+// /auth/login : Basic login route for admin/user
 router.route("/login").post(async (req: RequestWithUser, res: Response) => {
     const { email, passwd } = req.body;
     if (!email || !passwd) {

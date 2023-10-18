@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 import IUser from "./db/User";
 import ITask from "./db/Task";
 
@@ -6,22 +6,22 @@ type Role = "admin" | "user";
 
 // Ids for organisation
 export interface orgType {
-    orgId: string
+    orgId: Types.ObjectId
 }
 // Storing id for projects
 export interface projectType {
-    projectId: string
+    projectId: Types.ObjectId
 }
 
 // Storing id for users
 export interface userType {
-    userId: string,
+    userId: Types.ObjectId,
     role: Role
 }
 
 // For tasks id
 export interface taskType {
-    taskId: string
+    taskId: Types.ObjectId
 }
 
 export interface chatToType {
@@ -45,7 +45,7 @@ export interface IUser extends Document {
 export interface ITask extends Document {
     name: string;
     desc: string;
-    projectId: string,
+    projectId: projectType,
     status?: string;
     assignedBy?: userType;
     assignedTo?: userType[];    /* Task can be assigned to more than one user*/
@@ -57,6 +57,8 @@ export interface ITask extends Document {
 export interface IProject extends Document {
     name: string,
     desc: string,
+    createdBy: userType,
+    orgId: orgType
     tasks?: taskType[],
     users?: userType[]
 }

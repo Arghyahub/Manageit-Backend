@@ -11,15 +11,15 @@ interface RequestWithOrg extends Request {
     user?: IOrganisation;
 }
 
-// Route for signup as an organisation
+// /org/signup: Route for signup as an organisation
 router.route("/signup").post(async (req: Request, res: Response) => {
     const { name, email, passwd } = req.body;
     if (!name || !email || !passwd) {
         return res.status(400).json({ msg: "Name, email, or password missing" });
     }
     try {
-        const existingOrg = await Organisation.findOne({ email });
-        if (existingOrg) {
+        const orgCount = await Organisation.countDocuments({ email: email });
+        if (orgCount > 0) {
             return res.status(409).json({ msg: "Organization already exists with this email" });
         }
         const hashedPasswd = await bcrypt.hash(passwd, 10);
@@ -35,7 +35,7 @@ router.route("/signup").post(async (req: Request, res: Response) => {
     }
 });
 
-// Route for login as organisation
+// /org/login: Route for login as organisation
 router.route("/login").post(async (req: RequestWithOrg, res: Response) => {
     const { email, passwd } = req.body;
     if (!email || !passwd) {
@@ -58,5 +58,27 @@ router.route("/login").post(async (req: RequestWithOrg, res: Response) => {
         return res.status(500).json({ msg: "Internal Server Error!", error });
     }
 });
+
+// /org/:orgId: Route for fetching organisation details
+router.route("/:orgId").get(async (req: Request, res: Response) => {
+    const id = req.params.orgId;
+    try {
+        const org = await Organisation.findById(id);
+        return res.status(200).json({ msg: "Successfully fetched the org details", org: org });
+    } catch (error) {
+        return res.status(404).json({ msg: "Organisation not found!", error });
+    }
+})
+
+// /org/:orgId/users: Route for fetching users list in the org
+router.route("/:orgId/users").get(async (req: Request, res: Response) => {
+    const id = req.params.orgId;
+    try {
+        const org = await Organisation.findById(id).select("users");
+        return res.status(200).json({ msg: "Successfully fetched the user's list", users: org?.users });
+    } catch (error) {
+        return res.status(404).json({ msg: "Organisation not found!", error });
+    }
+})
 
 export default router;
