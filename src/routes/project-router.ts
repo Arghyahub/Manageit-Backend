@@ -4,13 +4,16 @@ import User from "../db/User";
 import Organisation from "../db/Organisation";
 import { IProject } from "../types";
 import checkAdmin from "../middlewares/adminAuth";
+import checkUser from "../middlewares/userAuth";
+import checkAdminInOrg from "../middlewares/orgAuth";
+import taskRoutes from "../routes/task-router";
 
 const router = Router();
 
 // Todo: Implement pagination for get request for users and tasks array
 
-// /project: Route for creating new projects
-router.route("/").post(checkAdmin, async (req: Request, res: Response) => {
+// /project :- Route for creating new projects
+router.route("/").post(checkAdminInOrg, async (req: Request, res: Response) => {
     try {
         const project: IProject = req.body;
         const newProject = new Project(project);
@@ -28,9 +31,9 @@ router.route("/").post(checkAdmin, async (req: Request, res: Response) => {
     }
 });
 
-// /project/:projectId Route for Read, Update, Delete in a specific project
+// /project/:projectId :- Route for Read, Update, Delete in a specific project
 router.route("/:projectId")
-    .get(async (req: Request, res: Response) => {
+    .get(checkUser, async (req: Request, res: Response) => {
         const id = req.params.projectId;
         try {
             const project = await Project.findById(id);
@@ -74,7 +77,7 @@ router.route("/:projectId")
 
 
 // Fetching and adding users using projectId
-router.route("/:projectId/users").get(async (req: Request, res: Response) => {
+router.route("/:projectId/users").get(checkUser, async (req: Request, res: Response) => {
     const id = req.params.projectId;
     try {
         const project = await Project.findById(id).select("users");
@@ -95,5 +98,8 @@ router.route("/:projectId/users").get(async (req: Request, res: Response) => {
         return res.status(500).json({ msg: "Server Error!", error });
     }
 });
+
+// Router related to tasks
+router.use("/:projectId/task", taskRoutes);
 
 export default router;

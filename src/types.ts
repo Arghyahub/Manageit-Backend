@@ -4,10 +4,6 @@ import ITask from "./db/Task";
 
 type Role = "admin" | "user";
 
-// Ids for organisation
-export interface orgType {
-    orgId: Types.ObjectId
-}
 // Storing id for projects
 export interface projectType {
     projectId: Types.ObjectId
@@ -26,6 +22,7 @@ export interface taskType {
 
 // Comments interface for Tasks
 export interface commentType extends Document {
+    userId: Types.ObjectId,
     userName: string,
     comment: string,
     timestamp: Date,
@@ -44,7 +41,7 @@ export interface IUser extends Document {
     email: string,
     passwd: string,
     projects?: projectType[],
-    orgId: orgType,
+    orgId: Types.ObjectId,
     chatTo?: chatToType[],
 }
 
@@ -68,7 +65,7 @@ export interface IProject extends Document {
     desc: string,
     createdBy: userType,
     date: Date,
-    orgId: orgType,
+    orgId: Types.ObjectId,
     tasks?: taskType[],
     users?: userType[]
 }
