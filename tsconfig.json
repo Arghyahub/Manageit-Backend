@@ -8,8 +8,8 @@
       "esModuleInterop": true,             // Enable ES module interoperability
       "forceConsistentCasingInFileNames": true, // Enforce consistent file naming
       "removeComments": true,              // Remove comments from the output
-      "declaration": true,                 // Generate declaration files (.d.ts)
-      "sourceMap": true,                   // Generate source maps for debugging
+      "declaration": false,                 // Generate declaration files (.d.ts)
+      "sourceMap": false,                   // Generate source maps for debugging
   
       "baseUrl": ".",                      // Base directory for resolving non-relative module names
       "paths": {
