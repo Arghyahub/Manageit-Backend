@@ -12,6 +12,7 @@ const taskSchema: Schema<ITask> = new Schema({
     deadline: { type: Date, required: false },
     date: { type: Date, default: Date.now, required: true },
     comments: [{
+        userId: { type: Schema.Types.ObjectId, required: true },
         userName: { type: String, required: true },
         comment: { type: String, required: true },
         timestamp: { type: Date, default: Date.now, required: true }

@@ -3,18 +3,20 @@ import Task from "../db/Task";
 import Project from "../db/Project";
 import { ITask, commentType } from "../types";
 import checkAdmin from "../middlewares/adminAuth";
+import checkUser from "../middlewares/userAuth";
 
 const router = Router();
 
-// /task: Post route for creating new tasks
+// /project/:projectId/task :- Post route for creating new tasks
 router.route("/").post(checkAdmin, async (req: Request, res: Response) => {
     try {
+        const projectId = req.params.projectId;
         const task: ITask = req.body;
         const newTask = new Task(task);
         const saveTask = await newTask.save();
 
         // Save the task in the project that it is part of
-        const created = await Project.findByIdAndUpdate(newTask.projectId, { $push: { tasks: saveTask._id } });
+        const created = await Project.findByIdAndUpdate(projectId, { $push: { tasks: saveTask._id } });
         if (!created) {
             await Task.deleteOne({ _id: saveTask._id })
             return res.status(404).json({ msg: "Project not found, task can't be created!" });
@@ -27,9 +29,9 @@ router.route("/").post(checkAdmin, async (req: Request, res: Response) => {
 });
 
 
-// /task/:taskId: Read, Update, Delete a specific task
+// /project/:projectId/task/:taskId :- Read, Update, Delete a specific task
 router.route("/:taskId")
-    .get(async (req: Request, res: Response) => {
+    .get(checkUser, async (req: Request, res: Response) => {
         const id = req.params.taskId;
         try {
             const task = await Task.findById(id);
@@ -53,11 +55,12 @@ router.route("/:taskId")
     })
     .delete(checkAdmin, async (req: Request, res: Response) => {
         const id = req.params.taskId;
+        const projectId = req.params.projectId;
         try {
             const task = await Task.findById(id);
 
             // Remove task from the project it was part of
-            await Project.updateOne({ _id: task?.projectId }, { $pull: { tasks: task?._id } })
+            await Project.updateOne({ _id: projectId }, { $pull: { tasks: task?._id } })
 
             // Delete the task
             const deletedTask = await Task.deleteOne({ _id: task?._id });
@@ -71,8 +74,8 @@ router.route("/:taskId")
         }
     });
 
-// /task/:taskId/comment: Add a new comment in the task
-router.route("/:taskId/comment").post(async (req: Request, res: Response) => {
+// /project/:projectId/task/:taskId/comment :- Add a new comment in the task
+router.route("/:taskId/comment").post(checkUser, async (req: Request, res: Response) => {
     const id = req.params.taskId;
     const comment: commentType = req.body;
     try {

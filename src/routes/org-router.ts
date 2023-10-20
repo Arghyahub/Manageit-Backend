@@ -11,7 +11,7 @@ interface RequestWithOrg extends Request {
     user?: IOrganisation;
 }
 
-// /org/signup: Route for signup as an organisation
+// /org/signup :- Route for signup as an organisation
 router.route("/signup").post(async (req: Request, res: Response) => {
     const { name, email, passwd } = req.body;
     if (!name || !email || !passwd) {
@@ -35,7 +35,7 @@ router.route("/signup").post(async (req: Request, res: Response) => {
     }
 });
 
-// /org/login: Route for login as organisation
+// /org/login :- Route for login as organisation
 router.route("/login").post(async (req: RequestWithOrg, res: Response) => {
     const { email, passwd } = req.body;
     if (!email || !passwd) {
@@ -59,7 +59,7 @@ router.route("/login").post(async (req: RequestWithOrg, res: Response) => {
     }
 });
 
-// /org/:orgId: Route for fetching organisation details
+// /org/:orgId :- Route for fetching organisation details
 router.route("/:orgId").get(async (req: Request, res: Response) => {
     const id = req.params.orgId;
     try {
@@ -68,9 +68,9 @@ router.route("/:orgId").get(async (req: Request, res: Response) => {
     } catch (error) {
         return res.status(404).json({ msg: "Organisation not found!", error });
     }
-})
+});
 
-// /org/:orgId/users: Route for fetching users list in the org
+// /org/:orgId/users :- Route for fetching users list in the org
 router.route("/:orgId/users").get(async (req: Request, res: Response) => {
     const id = req.params.orgId;
     try {
@@ -79,6 +79,6 @@ router.route("/:orgId/users").get(async (req: Request, res: Response) => {
     } catch (error) {
         return res.status(404).json({ msg: "Organisation not found!", error });
     }
-})
+});
 
 export default router;

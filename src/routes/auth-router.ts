@@ -13,7 +13,7 @@ interface RequestWithUser extends Request {
     user?: IUser;
 }
 
-// /auth/signup: Signup for new users invited by the org
+// /auth/signup :- Signup for new users invited by the org
 router.route("/signup").post(async (req: RequestWithUser, res: Response) => {
     const { name, email, orgId } = req.body;
     if (!email) {
@@ -54,7 +54,7 @@ router.route("/signup").post(async (req: RequestWithUser, res: Response) => {
     }
 });
 
-// /auth/login : Basic login route for admin/user
+// /auth/login :- Basic login route for admin/user
 router.route("/login").post(async (req: RequestWithUser, res: Response) => {
     const { email, passwd } = req.body;
     if (!email || !passwd) {
