@@ -8,14 +8,9 @@ import Organisation from "../db/Organisation";
 const router = Router();
 const secret = process.env.SECRET || "";
 
-// For setting req.user as user, otherwise ts shows error as it can of any type
-interface RequestWithUser extends Request {
-    user?: IUser;
-}
-
 // /auth/signup :- Signup for new users invited by the org
-router.route("/signup").post(async (req: RequestWithUser, res: Response) => {
-    const { name, email, orgId } = req.body;
+router.route("/signup").post(async (req: Request, res: Response) => {
+    const { name, email, orgId, role } = req.body;
     if (!email) {
         return res.status(400).json({ msg: "Please enter correct email!" });
     }
@@ -37,7 +32,7 @@ router.route("/signup").post(async (req: RequestWithUser, res: Response) => {
             name: name,
             email: email,
             passwd: passwd,
-            role: req.body.role || "user",
+            role: role || "user",
             orgId: orgId
         })
         const savedUser = await newUser.save();
@@ -55,7 +50,7 @@ router.route("/signup").post(async (req: RequestWithUser, res: Response) => {
 });
 
 // /auth/login :- Basic login route for admin/user
-router.route("/login").post(async (req: RequestWithUser, res: Response) => {
+router.route("/login").post(async (req: Request, res: Response) => {
     const { email, passwd } = req.body;
     if (!email || !passwd) {
         return res.status(400).json({ msg: "Email or password missing", token: null });
@@ -74,7 +69,6 @@ router.route("/login").post(async (req: RequestWithUser, res: Response) => {
             return res.status(401).json({ msg: "Incorrect password", token: null });
         }
         const token = jwt.sign({ id: user._id }, secret);
-        req.user = user;
 
         return res.status(200).json({ msg: "Login successful", token: token, role: user.role });
     } catch (error) {

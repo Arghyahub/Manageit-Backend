@@ -2,19 +2,29 @@ import { Router, Request, Response } from "express";
 import User from "../db/User";
 import Project from "../db/Project";
 import Organisation from "../db/Organisation";
+import { authUser } from "../middlewares/userAuth";
+import { IUser } from "../types";
+
 const router = Router();
 
-// Route /user/:userId 
-router.route("/:userId").get(async (req: Request, res: Response) => {
-    const id = req.params.userId;
+// For setting req.user as user, otherwise ts shows error as it can of any type
+interface RequestWithUser extends Request {
+    user?: IUser;
+}
+
+// Route /user -> To be used by the user with auth token
+router.route("/").get(authUser, async (req: RequestWithUser, res: Response) => {
+    const id = req.user?.id;
     try {
-        const user = await User.findById(id);
+        const user = await User.findById(id).select("-passwd");
+
+        // Return the user details without passwd
         return res.status(200).json({ msg: "Successfully fetched the user details!", user: user });
     } catch (error) {
         return res.status(404).json({ msg: "User is not found!" });
     }
-}).put(async (req: Request, res: Response) => {
-    const id = req.params.userId;
+}).put(authUser, async (req: RequestWithUser, res: Response) => {
+    const id = req.user?.id;
     try {
         const updatedUser = await User.findByIdAndUpdate(id, req.body, { new: true })
         if (updatedUser) {
@@ -25,8 +35,8 @@ router.route("/:userId").get(async (req: Request, res: Response) => {
     } catch (error) {
         return res.status(500).json({ msg: "Internal Server Error!", error });
     }
-}).delete(async (req: Request, res: Response) => {
-    const id = req.params.userId;
+}).delete(authUser, async (req: RequestWithUser, res: Response) => {
+    const id = req.user?.id;
     try {
         const user = await User.findById(id);
 
@@ -44,5 +54,16 @@ router.route("/:userId").get(async (req: Request, res: Response) => {
         return res.status(404).json({ msg: "User is not found!" });
     }
 });
+
+// /user/:userId -> To get info of the user with that userId
+router.route("/:userId").get(async (req: Request, res: Response) => {
+    const id = req.params.userId;
+    try {
+        const user = await User.findById(id).select("-passwd -chatTo");
+        return res.status(200).json({ msg: "Successfully fetched the user details!", user: user });
+    } catch (error) {
+        return res.status(404).json({ msg: "User is not found!" });
+    }
+})
 
 export default router;

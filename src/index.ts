@@ -12,11 +12,13 @@ import authRoutes from "./routes/auth-router";
 import projectRoutes from "./routes/project-router";
 import orgRoutes from "./routes/org-router";
 import userRoutes from "./routes/user-router";
+import taskRoutes from "./routes/task-router";
 
 app.use("/auth", authRoutes)
 app.use("/project", projectRoutes);
 app.use("/org", orgRoutes);
 app.use("/user", userRoutes);
+app.use("/task", taskRoutes);
 
 // Connect to database
 import connectDB from "./db/index";

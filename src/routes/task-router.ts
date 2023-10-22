@@ -3,14 +3,14 @@ import Task from "../db/Task";
 import Project from "../db/Project";
 import { ITask, commentType } from "../types";
 import checkAdmin from "../middlewares/adminAuth";
-import checkUser from "../middlewares/userAuth";
+import { authUser, checkUser } from "../middlewares/userAuth";
 
 const router = Router();
 
-// /project/:projectId/task :- Post route for creating new tasks
-router.route("/").post(checkAdmin, async (req: Request, res: Response) => {
+// /task :- Post route for creating new tasks
+router.route("/").post(authUser, checkUser, checkAdmin, async (req: Request, res: Response) => {
     try {
-        const projectId = req.params.projectId;
+        const projectId = req.body.projectId;
         const task: ITask = req.body;
         const newTask = new Task(task);
         const saveTask = await newTask.save();
@@ -29,9 +29,9 @@ router.route("/").post(checkAdmin, async (req: Request, res: Response) => {
 });
 
 
-// /project/:projectId/task/:taskId :- Read, Update, Delete a specific task
+// /task/:taskId :- Read, Update, Delete a specific task
 router.route("/:taskId")
-    .get(checkUser, async (req: Request, res: Response) => {
+    .get(authUser, checkUser, async (req: Request, res: Response) => {
         const id = req.params.taskId;
         try {
             const task = await Task.findById(id);
@@ -40,7 +40,7 @@ router.route("/:taskId")
             return res.status(404).json({ msg: "Task not found", error });
         }
     })
-    .put(checkAdmin, async (req: Request, res: Response) => {
+    .put(authUser, checkUser, checkAdmin, async (req: Request, res: Response) => {
         const id = req.params.taskId;
         try {
             const updatedTask = await Task.findByIdAndUpdate(id, req.body, { new: true })
@@ -53,14 +53,13 @@ router.route("/:taskId")
             return res.status(500).json({ msg: "Internal Server Error!", error });
         }
     })
-    .delete(checkAdmin, async (req: Request, res: Response) => {
+    .delete(authUser, checkUser, checkAdmin, async (req: Request, res: Response) => {
         const id = req.params.taskId;
-        const projectId = req.params.projectId;
         try {
             const task = await Task.findById(id);
 
             // Remove task from the project it was part of
-            await Project.updateOne({ _id: projectId }, { $pull: { tasks: task?._id } })
+            await Project.updateOne({ _id: task?.projectId }, { $pull: { tasks: task?._id } })
 
             // Delete the task
             const deletedTask = await Task.deleteOne({ _id: task?._id });
@@ -74,8 +73,8 @@ router.route("/:taskId")
         }
     });
 
-// /project/:projectId/task/:taskId/comment :- Add a new comment in the task
-router.route("/:taskId/comment").post(checkUser, async (req: Request, res: Response) => {
+// /task/:taskId/comment :- Add a new comment in the task
+router.route("/:taskId/comment").post(authUser, checkUser, async (req: Request, res: Response) => {
     const id = req.params.taskId;
     const comment: commentType = req.body;
     try {

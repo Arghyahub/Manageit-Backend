@@ -3,13 +3,10 @@ import Organisation from "../db/Organisation";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { IOrganisation } from "../types";
+import { authUser } from "../middlewares/userAuth";
 
 const router = Router();
 const secret = process.env.SECRET || "";
-
-interface RequestWithOrg extends Request {
-    user?: IOrganisation;
-}
 
 // /org/signup :- Route for signup as an organisation
 router.route("/signup").post(async (req: Request, res: Response) => {
@@ -29,14 +26,15 @@ router.route("/signup").post(async (req: Request, res: Response) => {
             passwd: hashedPasswd,
         });
         await newOrg.save();
-        return res.status(201).json({ msg: "Organization signed up successfully" });
+        const token = jwt.sign({ id: newOrg._id }, secret)
+        return res.status(201).json({ msg: "Organization signed up successfully", token: token, role: "owner" });
     } catch (error) {
         return res.status(500).json({ msg: "Internal Server Error", error });
     }
 });
 
 // /org/login :- Route for login as organisation
-router.route("/login").post(async (req: RequestWithOrg, res: Response) => {
+router.route("/login").post(async (req: Request, res: Response) => {
     const { email, passwd } = req.body;
     if (!email || !passwd) {
         return res.status(400).json({ msg: "Email or password missing", token: null });
@@ -51,7 +49,6 @@ router.route("/login").post(async (req: RequestWithOrg, res: Response) => {
             return res.status(401).json({ msg: "Incorrect password", token: null });
         }
         const token = jwt.sign({ id: orgUser._id }, secret)
-        req.user = orgUser;
         return res.status(200).json({ msg: "Login successful as organisation", token: token, role: "owner" });
     }
     catch (error) {
@@ -60,10 +57,10 @@ router.route("/login").post(async (req: RequestWithOrg, res: Response) => {
 });
 
 // /org/:orgId :- Route for fetching organisation details
-router.route("/:orgId").get(async (req: Request, res: Response) => {
+router.route("/:orgId").get(authUser, async (req: Request, res: Response) => {
     const id = req.params.orgId;
     try {
-        const org = await Organisation.findById(id);
+        const org = await Organisation.findById(id).select("-passwd");
         return res.status(200).json({ msg: "Successfully fetched the org details", org: org });
     } catch (error) {
         return res.status(404).json({ msg: "Organisation not found!", error });
@@ -71,7 +68,7 @@ router.route("/:orgId").get(async (req: Request, res: Response) => {
 });
 
 // /org/:orgId/users :- Route for fetching users list in the org
-router.route("/:orgId/users").get(async (req: Request, res: Response) => {
+router.route("/:orgId/users").get(authUser, async (req: Request, res: Response) => {
     const id = req.params.orgId;
     try {
         const org = await Organisation.findById(id).select("users");
