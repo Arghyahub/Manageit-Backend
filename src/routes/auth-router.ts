@@ -4,15 +4,26 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { IUser } from "../types";
 import Organisation from "../db/Organisation";
+import { authUser } from "../middlewares/userAuth";
 
 const router = Router();
 const secret = process.env.SECRET || "";
 
+// For setting req.user as user, otherwise ts shows error as it can of any type
+interface RequestWithUser extends Request {
+    user?: IUser;
+}
+
 // /auth/signup :- Signup for new users invited by the org
-router.route("/signup").post(async (req: Request, res: Response) => {
+router.route("/signup").post(authUser, async (req: RequestWithUser, res: Response) => {
     const { name, email, orgId, role } = req.body;
     if (!email) {
         return res.status(400).json({ msg: "Please enter correct email!" });
+    }
+
+    // If role is not owner then show error
+    if (req.user?.role !== "owner") {
+        return res.status(403).json({ msg: "Unauthorised request!" });
     }
     try {
         // Checking if user with that email already exists
@@ -38,7 +49,7 @@ router.route("/signup").post(async (req: Request, res: Response) => {
         const savedUser = await newUser.save();
 
         // Adding the user id in the array inside OrganisationDB
-        const saved = await Organisation.findByIdAndUpdate(orgId, { $push: { users: savedUser._id } })
+        const saved = await Organisation.findByIdAndUpdate(orgId, { $push: { users: { userId: savedUser._id, name: savedUser.name } } })
         if (!saved) {
             await User.deleteOne({ _id: savedUser._id });
             return res.status(404).json({ msg: "Organisation not found, user can't be created!" });

@@ -2,12 +2,16 @@ import { Document, Types } from "mongoose";
 import IUser from "./db/User";
 import ITask from "./db/Task";
 
-type Role = "admin" | "user";
-
-// Storing id for users
+// Storing id and name for users
 export interface userType {
     userId: Types.ObjectId,
-    role: Role
+    name: string
+}
+
+// Storing id and name for projects
+export interface projectType extends Document {
+    projectId: Types.ObjectId,
+    name: string
 }
 
 // Comments interface for Tasks
@@ -24,18 +28,18 @@ export interface chatToType {
 }
 
 
-// Interface for User (admin and normal user)
+// Interface for User DB
 export interface IUser extends Document {
     name: string,
-    role: Role,
+    role: string,
     email: string,
     passwd: string,
-    projects?: Types.ObjectId[],
+    projects?: projectType[],
     orgId: Types.ObjectId,
     chatTo?: chatToType[],
 }
 
-// Interface for Tasks
+// Interface for Task DB
 export interface ITask extends Document {
     name: string,
     desc: string,
@@ -49,7 +53,7 @@ export interface ITask extends Document {
     comments?: commentType[]
 }
 
-// Interface for Project
+// Interface for Project DB
 export interface IProject extends Document {
     name: string,
     desc: string,
@@ -60,11 +64,12 @@ export interface IProject extends Document {
     users?: userType[]
 }
 
-// Interface for Organisation
+// Interface for Organisation DB
 export interface IOrganisation extends Document {
     name: string,
     email: string,
     passwd: string,
-    projects?: Types.ObjectId[],
+    role: string,
+    projects?: projectType[],
     users?: userType[]
 }

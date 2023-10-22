@@ -2,12 +2,13 @@ import { Request, Response, NextFunction } from "express";
 import { Types } from "mongoose";
 import jwt from "jsonwebtoken";
 import User from "../db/User";
-import { IUser } from "../types";
+import { IOrganisation, IUser } from "../types";
 import Task from "../db/Task";
+import Organisation from "../db/Organisation";
 
 // For setting req.user as user, otherwise ts shows error as it can of any type
 interface RequestWithUser extends Request {
-    user?: IUser;
+    user?: IUser | IOrganisation;
 }
 
 const secret = process.env.SECRET || "";
@@ -20,12 +21,20 @@ const authUser = async (req: RequestWithUser, res: Response, next: NextFunction)
     }
     try {
         const decoded = jwt.verify(token, secret) as IUser;
-        console.log("Decoded: ", decoded);
         const user = await User.findById(decoded?.id);
+
+        // Check if user exists
         if (!user) {
-            return res.status(401).json({ msg: "User doesn't exist", token: true, valid: false });
-        }
-        req.user = user;
+            // Check if org exists
+            const org = await Organisation.findById(decoded?.id)
+            if (!org)
+                return res.status(401).json({ msg: "User doesn't exist", token: true, valid: false });
+            else {
+                req.user = org;
+            }
+        } else
+            req.user = user;
+
         next();
     } catch (err) {
         return res.status(500).json({ msg: "Some error occured", token: true, valid: true });
@@ -60,7 +69,7 @@ const checkUser = async (req: RequestWithUser, res: Response, next: NextFunction
     }
 
     // Matching both the projectIds
-    if (req.user.projects.some((id) => id.equals(new Types.ObjectId(projectId)))) {
+    if (req.user.projects.some((project) => project?.projectId?.equals(new Types.ObjectId(projectId)))) {
         next();
     } else
         return res.status(403).json({ msg: "User is not part of the project" });

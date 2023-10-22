@@ -8,6 +8,11 @@ import { authUser } from "../middlewares/userAuth";
 const router = Router();
 const secret = process.env.SECRET || "";
 
+// For setting req.user as user, otherwise ts shows error as it can of any type
+interface RequestWithOrg extends Request {
+    user?: IOrganisation;
+}
+
 // /org/signup :- Route for signup as an organisation
 router.route("/signup").post(async (req: Request, res: Response) => {
     const { name, email, passwd } = req.body;
@@ -56,7 +61,20 @@ router.route("/login").post(async (req: Request, res: Response) => {
     }
 });
 
-// /org/:orgId :- Route for fetching organisation details
+// /org :- Route for fetching organisation details using the token
+router.route("/").get(authUser, async (req: RequestWithOrg, res: Response) => {
+    const id = req.user?.id;
+    try {
+        const org = await Organisation.findById(id).select("-passwd");
+        if (org) return res.status(200).json({ msg: "Successfully fetched the org details", org: org });
+        else return res.status(400).json({ msg: "Error while fetching details!" });
+
+    } catch (error) {
+        return res.status(404).json({ msg: "Organisation not found!", error });
+    }
+});
+
+// /org/:orgId :- Route for fetching specific organisation details
 router.route("/:orgId").get(authUser, async (req: Request, res: Response) => {
     const id = req.params.orgId;
     try {

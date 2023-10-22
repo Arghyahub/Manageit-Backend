@@ -22,14 +22,13 @@ const checkAdminInOrg = (req: RequestWithUser, res: Response, next: NextFunction
         return res.status(404).json({ msg: "User not found!" });
     }
 
-    // Checking if user's orgId is same as in the body
-    if (!user.orgId.equals(new Types.ObjectId(orgId))) {
-        return res.status(403).json({ msg: "User is not part of the organization!" });
-    }
-    
-    // Checking role of user
-    if (user.role !== "admin") {
+    if (user.role === "user") {
         return res.status(403).json({ msg: "User is not an admin in the organization!" });
+    }
+
+    // Checking if user's orgId is same as in the body
+    if (user.orgId && !user.orgId?.equals(new Types.ObjectId(orgId))) {
+        return res.status(403).json({ msg: "User is not part of the organization!" });
     }
 
     next();

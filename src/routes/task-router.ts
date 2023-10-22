@@ -7,27 +7,7 @@ import { authUser, checkUser } from "../middlewares/userAuth";
 
 const router = Router();
 
-// /task :- Post route for creating new tasks
-router.route("/").post(authUser, checkUser, checkAdmin, async (req: Request, res: Response) => {
-    try {
-        const projectId = req.body.projectId;
-        const task: ITask = req.body;
-        const newTask = new Task(task);
-        const saveTask = await newTask.save();
-
-        // Save the task in the project that it is part of
-        const created = await Project.findByIdAndUpdate(projectId, { $push: { tasks: saveTask._id } });
-        if (!created) {
-            await Task.deleteOne({ _id: saveTask._id })
-            return res.status(404).json({ msg: "Project not found, task can't be created!" });
-        } else {
-            return res.status(201).json({ msg: "Successfully created the task!", task: newTask });
-        }
-    } catch (error) {
-        return res.status(500).json({ msg: "Internal Server Error", error });
-    }
-});
-
+// Todo: Implement pagination for get req for comments array insted of sending it once with the get req for task
 
 // /task/:taskId :- Read, Update, Delete a specific task
 router.route("/:taskId")
