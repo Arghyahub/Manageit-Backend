@@ -6,9 +6,9 @@ const taskSchema: Schema<ITask> = new Schema({
     desc: { type: String, required: true },
     projectId: { type: Schema.Types.ObjectId, ref: 'Project', required: true },
     status: { type: String, required: false },
-    assignedBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
-    assignedTo: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    assignedBy: { _id: false, userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }, name: { type: String, required: true } },
+    assignedTo: [{ _id: false, userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }, name: { type: String, required: true } }],
+    createdBy: { _id: false, userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }, name: { type: String, required: true } },
     deadline: { type: Date, required: false },
     date: { type: Date, default: Date.now, required: true },
     comments: [{

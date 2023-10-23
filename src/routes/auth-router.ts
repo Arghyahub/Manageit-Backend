@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { IUser } from "../types";
 import Organisation from "../db/Organisation";
+import { authUser } from "../middlewares/userAuth";
 
 const router = Router();
 const secret = process.env.SECRET || "";
@@ -14,10 +15,15 @@ interface RequestWithUser extends Request {
 }
 
 // /auth/signup :- Signup for new users invited by the org
-router.route("/signup").post(async (req: RequestWithUser, res: Response) => {
-    const { name, email, orgId } = req.body;
+router.route("/signup").post(authUser, async (req: RequestWithUser, res: Response) => {
+    const { name, email, orgId, role } = req.body;
     if (!email) {
         return res.status(400).json({ msg: "Please enter correct email!" });
+    }
+
+    // If role is not owner then show error
+    if (req.user?.role !== "owner") {
+        return res.status(403).json({ msg: "Unauthorised request!" });
     }
     try {
         // Checking if user with that email already exists
@@ -37,13 +43,13 @@ router.route("/signup").post(async (req: RequestWithUser, res: Response) => {
             name: name,
             email: email,
             passwd: passwd,
-            role: req.body.role || "user",
+            role: role || "user",
             orgId: orgId
         })
         const savedUser = await newUser.save();
 
         // Adding the user id in the array inside OrganisationDB
-        const saved = await Organisation.findByIdAndUpdate(orgId, { $push: { users: savedUser._id } })
+        const saved = await Organisation.findByIdAndUpdate(orgId, { $push: { users: { userId: savedUser._id, name: savedUser.name } } })
         if (!saved) {
             await User.deleteOne({ _id: savedUser._id });
             return res.status(404).json({ msg: "Organisation not found, user can't be created!" });
@@ -55,7 +61,7 @@ router.route("/signup").post(async (req: RequestWithUser, res: Response) => {
 });
 
 // /auth/login :- Basic login route for admin/user
-router.route("/login").post(async (req: RequestWithUser, res: Response) => {
+router.route("/login").post(async (req: Request, res: Response) => {
     const { email, passwd } = req.body;
     if (!email || !passwd) {
         return res.status(400).json({ msg: "Email or password missing", token: null });
@@ -74,7 +80,6 @@ router.route("/login").post(async (req: RequestWithUser, res: Response) => {
             return res.status(401).json({ msg: "Incorrect password", token: null });
         }
         const token = jwt.sign({ id: user._id }, secret);
-        req.user = user;
 
         return res.status(200).json({ msg: "Login successful", token: token, role: user.role });
     } catch (error) {
