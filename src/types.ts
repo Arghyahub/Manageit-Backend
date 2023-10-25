@@ -8,6 +8,12 @@ export interface userType {
     name: string
 }
 
+// Storing id and status for tasks
+export interface taskType extends Document {
+    taskId: Types.ObjectId,
+    status: string
+}
+
 // Storing id and name for projects
 export interface projectType extends Document {
     projectId: Types.ObjectId,
@@ -26,7 +32,6 @@ export interface chatToType {
     chatId: string,
     chatName: string
 }
-
 
 // Interface for User DB
 export interface IUser extends Document {
@@ -60,7 +65,7 @@ export interface IProject extends Document {
     createdBy: userType,
     date: Date,
     orgId: Types.ObjectId,
-    tasks?: Types.ObjectId[],
+    tasks?: taskType[],
     users?: userType[]
 }
 

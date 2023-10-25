@@ -3,7 +3,7 @@ import Project from "../db/Project";
 import User from "../db/User";
 import Task from "../db/Task";
 import Organisation from "../db/Organisation";
-import { IProject, IUser, ITask } from "../types";
+import { IProject, IUser, ITask, taskType } from "../types";
 import checkAdmin from "../middlewares/adminAuth";
 import { authUser, checkUser } from "../middlewares/userAuth";
 import checkAdminInOrg from "../middlewares/orgAuth";
@@ -51,9 +51,12 @@ router.route("/:projectId")
         const id = req.params.projectId;
         try {
             const project = await Project.findById(id);
+            if (!project) {
+                return res.status(404).json({ msg: "Project not found" });
+            }
             return res.status(200).json({ msg: "Successfully fetched the info!", project: project });
         } catch (error) {
-            return res.status(404).json({ msg: "Project not found", error });
+            return res.status(500).json({ msg: "Internal Server Error!", error });
         }
     })
     .put(authUser, checkUser, checkAdmin, async (req: Request, res: Response) => {
@@ -127,6 +130,28 @@ router.route("/:projectId/users").get(authUser, checkUser, async (req: Request, 
 
 // /project/:projectId/task -> Post route for creating a new task under the project
 router.route("/:projectId/task")
+    .get(authUser, checkUser, async (req: Request, res: Response) => {
+        const { projectId } = req.params;
+        const { status } = req.query;
+
+        try {
+            let tasks;
+            if (status === 'completed') {
+                // Fetch only completed tasks for the project
+                tasks = await Project.findById(projectId, 'tasks').where('tasks.status').equals('completed').exec();
+            } else if (status === 'pending') {
+                // Fetch all pending tasks for the project
+                tasks = await Project.findById(projectId, 'tasks').where('tasks.status').ne('completed').exec();
+            } else {
+                // Fetch all tasks for the project
+                tasks = await Project.findById(projectId, 'tasks').exec();
+            }
+
+            return res.status(200).json({ msg: "Successfully fetched the tasks!", tasks });
+        } catch (error) {
+            return res.status(500).json({ msg: "Internal Server Error!", error });
+        }
+    })
     .post(authUser, checkUser, checkAdmin, async (req: Request, res: Response) => {
         try {
             const projectId = req.body.projectId;
@@ -135,7 +160,7 @@ router.route("/:projectId/task")
             const saveTask = await newTask.save();
 
             // Save the task in the project that it is part of
-            const created = await Project.findByIdAndUpdate(projectId, { $push: { tasks: saveTask._id } });
+            const created = await Project.findByIdAndUpdate(projectId, { $push: { tasks: { taskId: saveTask._id, status: "assigned" } } });
             if (!created) {
                 await Task.deleteOne({ _id: saveTask._id })
                 return res.status(404).json({ msg: "Project not found, task can't be created!" });

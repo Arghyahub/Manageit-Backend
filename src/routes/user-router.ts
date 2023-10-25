@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import User from "../db/User";
 import { authUser } from "../middlewares/userAuth";
+import checkAdmin from "../middlewares/adminAuth";
 import { IUser } from "../types";
 // import Project from "../db/Project";
 // import Organisation from "../db/Organisation";
@@ -60,7 +61,7 @@ router.route("/").get(authUser, async (req: RequestWithUser, res: Response) => {
 // });
 
 // /user/:userId -> To get info of the user with that userId
-router.route("/:userId").get(authUser, async (req: Request, res: Response) => {
+router.route("/:userId").get(authUser, checkAdmin, async (req: Request, res: Response) => {
     const id = req.params.userId;
     try {
         const user = await User.findById(id).select("-passwd -chatTo");
@@ -68,7 +69,7 @@ router.route("/:userId").get(authUser, async (req: Request, res: Response) => {
     } catch (error) {
         return res.status(404).json({ msg: "User is not found!" });
     }
-}).put(authUser, async(req: Request, res:Response)=>{
+}).put(authUser, async (req: Request, res: Response) => {
     const id = req.params.userId;
     try {
         const updatedUser = await User.findByIdAndUpdate(id, req.body, { new: true })
