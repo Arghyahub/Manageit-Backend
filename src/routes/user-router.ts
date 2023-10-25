@@ -3,6 +3,7 @@ import User from "../db/User";
 import { authUser } from "../middlewares/userAuth";
 import checkAdmin from "../middlewares/adminAuth";
 import { IUser } from "../types";
+import { Types } from "mongoose";
 // import Project from "../db/Project";
 // import Organisation from "../db/Organisation";
 
@@ -61,7 +62,7 @@ router.route("/").get(authUser, async (req: RequestWithUser, res: Response) => {
 // });
 
 // /user/:userId -> To get info of the user with that userId
-router.route("/:userId").get(authUser, checkAdmin, async (req: Request, res: Response) => {
+router.route("/:userId").get(authUser, async (req: Request, res: Response) => {
     const id = req.params.userId;
     try {
         const user = await User.findById(id).select("-passwd -chatTo");
@@ -69,17 +70,22 @@ router.route("/:userId").get(authUser, checkAdmin, async (req: Request, res: Res
     } catch (error) {
         return res.status(404).json({ msg: "User is not found!" });
     }
-}).put(authUser, async (req: Request, res: Response) => {
+}).put(authUser, async (req: RequestWithUser, res: Response) => {
     const id = req.params.userId;
-    try {
-        const updatedUser = await User.findByIdAndUpdate(id, req.body, { new: true })
-        if (updatedUser) {
-            return res.status(200).json({ msg: "Updated the user details!" });
-        } else {
-            return res.status(404).json({ msg: "User not found!" });
+
+    if (req.user?.role === "owner" || req.user?.id === id) {
+        try {
+            const updatedUser = await User.findByIdAndUpdate(id, req.body, { new: true })
+            if (updatedUser) {
+                return res.status(200).json({ msg: "Updated the user details!" });
+            } else {
+                return res.status(404).json({ msg: "User not found!" });
+            }
+        } catch (error) {
+            return res.status(500).json({ msg: "Internal Server Error!", error });
         }
-    } catch (error) {
-        return res.status(500).json({ msg: "Internal Server Error!", error });
+    } else {
+        return res.status(403).json({ msg: "Unauthorised request!" });
     }
 });
 
