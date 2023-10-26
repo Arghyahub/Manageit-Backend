@@ -90,9 +90,12 @@ router.route("/:orgId/users").get(authUser, async (req: Request, res: Response) 
     const id = req.params.orgId;
     try {
         const org = await Organisation.findById(id).select("users");
-        return res.status(200).json({ msg: "Successfully fetched the user's list", users: org?.users });
+        if (!org) {
+            return res.status(404).json({ msg: "Organisation not found!" });
+        }
+        return res.status(200).json({ msg: "Successfully fetched the user's list", users: org.users });
     } catch (error) {
-        return res.status(404).json({ msg: "Organisation not found!", error });
+        return res.status(500).json({ msg: "Internal Server Error!", error });
     }
 });
 

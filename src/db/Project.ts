@@ -7,7 +7,7 @@ const projectSchema: Schema<IProject> = new Schema({
     createdBy: { _id: false, userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }, name: { type: String, required: true } },
     date: { type: Date, default: Date.now, required: true },
     orgId: { type: Schema.Types.ObjectId, ref: 'Organisation', required: true },
-    tasks: [{ type: Schema.Types.ObjectId, ref: 'Task' }],
+    tasks: [{ _id: false, taskId: { type: Schema.Types.ObjectId, ref: 'Task', required: true }, status: { type: String, default: "assigned", required: true } }],
     users: [{ _id: false, userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }, name: { type: String, required: true } }]
 });
 

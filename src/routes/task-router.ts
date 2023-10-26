@@ -13,15 +13,20 @@ const router = Router();
 router.route("/:taskId")
     .get(authUser, checkUser, async (req: Request, res: Response) => {
         const id = req.params.taskId;
+
         try {
             const task = await Task.findById(id);
+            if (!task) {
+                return res.status(404).json({ msg: "Task not found" });
+            }
             return res.status(200).json({ msg: "Successfully fetched the info!", task: task });
         } catch (error) {
-            return res.status(404).json({ msg: "Task not found", error });
+            return res.status(500).json({ msg: "Internal Server Error!", error });
         }
     })
     .put(authUser, checkUser, checkAdmin, async (req: Request, res: Response) => {
         const id = req.params.taskId;
+
         try {
             const updatedTask = await Task.findByIdAndUpdate(id, req.body, { new: true })
             if (updatedTask) {
@@ -35,11 +40,12 @@ router.route("/:taskId")
     })
     .delete(authUser, checkUser, checkAdmin, async (req: Request, res: Response) => {
         const id = req.params.taskId;
+
         try {
             const task = await Task.findById(id);
 
             // Remove task from the project it was part of
-            await Project.updateOne({ _id: task?.projectId }, { $pull: { tasks: task?._id } })
+            await Project.updateOne({ _id: task?.projectId }, { $pull: { tasks: { taskId: task?._id } } })
 
             // Delete the task
             const deletedTask = await Task.deleteOne({ _id: task?._id });
@@ -57,6 +63,11 @@ router.route("/:taskId")
 router.route("/:taskId/comment").post(authUser, checkUser, async (req: Request, res: Response) => {
     const id = req.params.taskId;
     const comment: commentType = req.body;
+
+    if (!req.body.comment) {
+        return res.status(400).json({ msg: "Wrong Input Received!" });
+    }
+
     try {
         const commented = await Task.findByIdAndUpdate(id, { $push: { comments: comment } });
         if (commented) {
