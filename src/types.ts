@@ -1,7 +1,6 @@
 import { Document, Types } from "mongoose";
 import IUser from "./db/User";
 import ITask from "./db/Task";
-import e from "express";
 
 // Storing id and name for users
 export interface userType {
@@ -29,7 +28,7 @@ export interface commentType extends Document {
     timestamp: Date,
 }
 
-export interface chatToType {
+export interface chatToType extends Document {
     chatId: Types.ObjectId,
     chatName: string,
     lastVis: Date
@@ -40,11 +39,11 @@ export interface messageType extends Document {
     userId: Types.ObjectId,
     name: string,
     message: string,
-    timestamp?: Date,
+    timestamp: Date,
 }
 
 // Chat DB interface
-export interface IChat {
+export interface IChat extends Document {
     userList: [Types.ObjectId, Types.ObjectId],
     messages: messageType[]
 }

@@ -6,9 +6,13 @@ const userSchema: Schema<IUser> = new Schema({
   role: { type: String, required: true },
   email: { type: String, required: true },
   passwd: { type: String, required: true },
-  projects: [{_id: false, projectId: { type: Schema.Types.ObjectId, ref: 'Project', required: true }, name: { type: String, required: true } }],
+  projects: [{ _id: false, projectId: { type: Schema.Types.ObjectId, ref: 'Project', required: true }, name: { type: String, required: true } }],
   orgId: { type: Schema.Types.ObjectId, ref: 'Organisation', required: true },
-  chatTo: [{ type: Object, required: false }],
+  chatTo: [{
+    chatId: { type: Schema.Types.ObjectId, ref: 'Chat' },
+    name: String,
+    lastVis: { type: Date, default: Date.now }
+  }]
 });
 
 const User: Model<IUser> = mongoose.model<IUser>('User', userSchema);
