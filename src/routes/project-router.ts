@@ -7,6 +7,7 @@ import { IProject, IUser, ITask, taskType } from "../types";
 import checkAdmin from "../middlewares/adminAuth";
 import { authUser, checkUser } from "../middlewares/userAuth";
 import checkAdminInOrg from "../middlewares/orgAuth";
+import { Types } from "mongoose";
 
 const router = Router();
 
@@ -128,13 +129,34 @@ router.route("/:projectId/users").get(authUser, checkUser, async (req: Request, 
     }
 });
 
-// /project/:projectId/task -> Post route for creating a new task under the project
+// /project/:projectId/task -> Get Route to fetch tasks from that project, Post route for creating a new task under the project
 router.route("/:projectId/task")
     .get(authUser, checkUser, async (req: Request, res: Response) => {
         const { projectId } = req.params;
-        const { status } = req.query;
+        const { status, assignTo } = req.query;
 
         try {
+            if (status === 'pending' && assignTo) {
+                const project = await Project.findById(projectId, 'tasks').exec();
+                if (!project) {
+                    return res.status(400).json({ msg: "Projects not found!" });
+                }
+
+                const tasksData = await Task.find({
+                    _id: { $in: project?.tasks?.map(task => task.taskId) },
+                    status: { $ne: 'completed' }, // Include tasks with status other than completed
+                    "assignedTo.userId": new Types.ObjectId(assignTo.toString()) 
+                }).exec();
+
+                if (!tasksData) {
+                    return res.status(400).json({ msg: "Tasks data not found!" });
+                }
+
+                const filteredTasks = tasksData.map(({ _id, status }) => ({ taskId: _id, status: status || "assigned" }));
+
+                return res.status(200).json({ msg: "Successfully fetched the tasks!", tasks: filteredTasks });
+            }
+
             let tasks;
             if (status === 'completed') {
                 // Fetch only completed tasks for the project
@@ -160,7 +182,7 @@ router.route("/:projectId/task")
             const saveTask = await newTask.save();
 
             // Save the task in the project that it is part of
-            const created = await Project.findByIdAndUpdate(projectId, { $push: { tasks: { taskId: saveTask._id, status: "assigned" } } });
+            const created = await Project.findByIdAndUpdate(projectId, { $push: { tasks: { taskId: saveTask._id, status: req.body.status || "assigned" } } });
             if (!created) {
                 await Task.deleteOne({ _id: saveTask._id })
                 return res.status(404).json({ msg: "Project not found, task can't be created!" });

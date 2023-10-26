@@ -28,9 +28,24 @@ export interface commentType extends Document {
     timestamp: Date,
 }
 
-export interface chatToType {
-    chatId: string,
-    chatName: string
+export interface chatToType extends Document {
+    chatId: Types.ObjectId,
+    chatName: string,
+    lastVis: Date
+}
+
+// Message interface for chats
+export interface messageType extends Document {
+    userId: Types.ObjectId,
+    name: string,
+    message: string,
+    timestamp: Date,
+}
+
+// Chat DB interface
+export interface IChat extends Document {
+    userList: [Types.ObjectId, Types.ObjectId],
+    messages: messageType[]
 }
 
 // Interface for User DB
