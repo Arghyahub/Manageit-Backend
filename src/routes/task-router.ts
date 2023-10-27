@@ -80,4 +80,18 @@ router.route("/:taskId/comment").post(authUser, checkUser, async (req: Request, 
     }
 });
 
+router.route("/:taskId/status").put(authUser, checkUser, async (req: Request, res: Response) => {
+    const id = req.params.taskId;
+    try {
+        const updatedTask = await Task.updateOne({ _id: id }, { $set: { status: req.body.status } });
+        if (updatedTask) {
+            return res.status(200).json({ msg: "Updated the task!" });
+        } else {
+            return res.status(404).json({ msg: "Task not found!" });
+        }
+    } catch (error) {
+        return res.status(500).json({ msg: "Internal Server Error!", error });
+    }
+})
+
 export default router;
