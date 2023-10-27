@@ -22,7 +22,7 @@ router.route("/:chatId").get(authUser, async (req: Request, res: Response) => {
 
 // Route /chat -> Post request to create a new message
 router.post("/", authUser, async (req: Request, res: Response) => {
-    const { senderId, receiverId, receiverName, message } = req.body;
+    const { senderId, receiverId, senderName , receiverName, message } = req.body;
 
     try {
         // Finding the chat with sender and receiver id
@@ -38,19 +38,23 @@ router.post("/", authUser, async (req: Request, res: Response) => {
             });
 
             // Update the user db for both sender and receiver with new chatId
-            await User.updateMany(
-                { _id: { $in: [senderId, receiverId] } },
-                { $push: { chatTo: { chatId: chat._id, name: receiverId, lastVis: Date.now() } } }
-            );
+            await User.updateOne(
+                {_id: senderId},
+                {$push: { chatTo: {chatId: chat._id, memberId: receiverId , name: receiverName, lastVis: Date.now()} }}   
+            )
+            await User.updateOne(
+                {_id: receiverId},
+                {$push: { chatTo: {chatId: chat._id, memberId: senderId , name: senderName, lastVis: Date.now()} }}   
+            )
         }
 
         // Add the new message to the chatDB
-        const newMessage: messageType = {
+        const newMessage = {
             userId: new Types.ObjectId(senderId),
-            name: receiverName as string,
+            name: senderName as string,
             message: message as string,
             timestamp: new Date(Date.now())
-        }
+        } as messageType ;
         chat.messages.push(newMessage);
         await chat.save();
 

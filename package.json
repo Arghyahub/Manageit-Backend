@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "This is the backend for Manageit",
   "main": "index.js",
-  
   "scripts": {
     "start": "ts-node --esm src/index.ts",
     "test": "node index.ts",
@@ -41,6 +40,7 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^7.6.2"
+    "mongoose": "^7.6.2",
+    "socket.io": "^4.7.2"
   }
 }

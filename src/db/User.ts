@@ -10,6 +10,7 @@ const userSchema: Schema<IUser> = new Schema({
   orgId: { type: Schema.Types.ObjectId, ref: 'Organisation', required: true },
   chatTo: [{
     chatId: { type: Schema.Types.ObjectId, ref: 'Chat' },
+    memberId: String,
     name: String,
     lastVis: { type: Date, default: Date.now }
   }]
