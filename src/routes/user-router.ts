@@ -4,8 +4,8 @@ import { authUser } from "../middlewares/userAuth";
 import checkAdmin from "../middlewares/adminAuth";
 import { IUser } from "../types";
 import { Types } from "mongoose";
-// import Project from "../db/Project";
-// import Organisation from "../db/Organisation";
+import Project from "../db/Project";
+import Organisation from "../db/Organisation";
 
 const router = Router();
 
@@ -86,6 +86,32 @@ router.route("/:userId").get(authUser, async (req: Request, res: Response) => {
         }
     } else {
         return res.status(403).json({ msg: "Unauthorised request!" });
+    }
+}).delete(authUser, async (req: RequestWithUser, res: Response) => {
+    const role = req.user?.role;
+    const id = req.params.userId;
+
+    if (role !== "owner") {
+        return res.status(403).json({ msg: "Unauthorised Request!" });
+    }
+    try {
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ msg: "User is not found!" });
+        }
+
+        // Remove the user ID from the projects they are part of
+        await Project.updateMany({ users: user?._id }, { $pull: { users: { userId: user?._id } } });
+
+        // Remove the user ID from the organisation
+        await Organisation.updateOne({ _id: user?.orgId }, { $pull: { users: { userId: user?._id } } });
+
+        // Delete the user from User model
+        await User.deleteOne({ _id: user?._id });
+
+        return res.status(200).json({ msg: "Successfully deleted the user!" });
+    } catch (error) {
+        return res.status(500).json({ msg: "Internal Server Error!" });
     }
 });
 

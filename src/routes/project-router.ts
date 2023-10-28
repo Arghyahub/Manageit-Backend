@@ -127,16 +127,36 @@ router.route("/:projectId/users").get(authUser, checkUser, async (req: Request, 
     } catch (error) {
         return res.status(500).json({ msg: "Server Error!", error });
     }
+}).delete(authUser, checkUser, checkAdmin, async (req: Request, res: Response) => {
+    const { projectId } = req.params;
+    const { userId } = req.body;
+    try {
+        // Remove user from the project
+        const updatedProject = await Project.findByIdAndUpdate(projectId, { $pull: { users: { userId: userId } } }, { new: true });
+        if (!updatedProject) {
+            return res.status(404).json({ msg: "Project not found!" });
+        }
+
+        // Remove project from the user
+        const updatedUser = await User.findByIdAndUpdate(userId, { $pull: { projects: { projectId: projectId } } }, { new: true });
+        if (!updatedUser) {
+            return res.status(404).json({ msg: "User not found!" });
+        }
+
+        return res.status(200).json({ msg: "User removed from the project!" });
+    } catch (error) {
+        return res.status(500).json({ msg: "Internal Server Error!", error });
+    }
 });
 
 // /project/:projectId/task -> Get Route to fetch tasks from that project, Post route for creating a new task under the project
 router.route("/:projectId/task")
     .get(authUser, checkUser, async (req: Request, res: Response) => {
         const { projectId } = req.params;
-        const { status, assignTo } = req.query;
+        let { status, assignTo } = req.query;
 
         try {
-            if (status === 'pending' && assignTo) {
+            if (status === 'Pending' && assignTo) {
                 const project = await Project.findById(projectId, 'tasks').exec();
                 if (!project) {
                     return res.status(400).json({ msg: "Projects not found!" });
@@ -144,26 +164,26 @@ router.route("/:projectId/task")
 
                 const tasksData = await Task.find({
                     _id: { $in: project?.tasks?.map(task => task.taskId) },
-                    status: { $ne: 'completed' }, // Include tasks with status other than completed
-                    "assignedTo.userId": new Types.ObjectId(assignTo.toString()) 
+                    status: { $ne: 'Completed' },
+                    "assignedTo.userId": new Types.ObjectId(assignTo.toString())
                 }).exec();
 
                 if (!tasksData) {
                     return res.status(400).json({ msg: "Tasks data not found!" });
                 }
 
-                const filteredTasks = tasksData.map(({ _id, status }) => ({ taskId: _id, status: status || "assigned" }));
+                const filteredTasks = tasksData.map(({ _id, status }) => ({ taskId: _id, status: status || "Assigned" }));
 
                 return res.status(200).json({ msg: "Successfully fetched the tasks!", tasks: filteredTasks });
             }
 
             let tasks;
-            if (status === 'completed') {
+            if (status === 'Completed') {
                 // Fetch only completed tasks for the project
-                tasks = await Project.findById(projectId, 'tasks').where('tasks.status').equals('completed').exec();
-            } else if (status === 'pending') {
+                tasks = await Project.findById(projectId, 'tasks').where('tasks.status').equals('Completed').exec();
+            } else if (status === 'Pending') {
                 // Fetch all pending tasks for the project
-                tasks = await Project.findById(projectId, 'tasks').where('tasks.status').ne('completed').exec();
+                tasks = await Project.findById(projectId, 'tasks').where('tasks.status').ne('Completed').exec();
             } else {
                 // Fetch all tasks for the project
                 tasks = await Project.findById(projectId, 'tasks').exec();
