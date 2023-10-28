@@ -57,6 +57,7 @@ export interface IUser extends Document {
     projects?: projectType[],
     orgId: Types.ObjectId,
     chatTo?: chatToType[],
+    fcmToken: string
 }
 
 // Interface for Task DB

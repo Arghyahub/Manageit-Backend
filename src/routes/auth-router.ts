@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { IUser } from "../types";
 import Organisation from "../db/Organisation";
 import { authUser } from "../middlewares/userAuth";
+import { testNotification } from "../notification";
 
 const router = Router();
 const secret = process.env.SECRET || "";
@@ -62,14 +63,14 @@ router.route("/signup").post(authUser, async (req: RequestWithUser, res: Respons
 
 // /auth/login :- Basic login route for admin/user
 router.route("/login").post(async (req: Request, res: Response) => {
-    const { email, passwd } = req.body;
+    const { email, passwd, fcmToken } = req.body;
     if (!email || !passwd) {
         return res.status(400).json({ msg: "Email or password missing", token: null });
     }
 
     try {
         // Checking if user does not exist
-        const user = await User.findOne({ email: email });
+        const user = await User.findOneAndUpdate({ email: email }, { $set: { fcmToken: fcmToken } });
         if (!user) {
             return res.status(404).json({ msg: "User not found", token: null });
         }
@@ -80,7 +81,8 @@ router.route("/login").post(async (req: Request, res: Response) => {
             return res.status(401).json({ msg: "Incorrect password", token: null });
         }
         const token = jwt.sign({ id: user._id }, secret);
-
+        testNotification(fcmToken);
+        console.log(user);
         return res.status(200).json({ msg: "Login successful", token: token, role: user.role });
     } catch (error) {
         return res.status(500).json({ msg: "Internal server error", token: null, error });

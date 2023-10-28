@@ -13,7 +13,8 @@ const userSchema: Schema<IUser> = new Schema({
     memberId: String,
     name: String,
     lastVis: { type: Date, default: Date.now }
-  }]
+  }],
+  fcmToken: { type: String }
 });
 
 const User: Model<IUser> = mongoose.model<IUser>('User', userSchema);

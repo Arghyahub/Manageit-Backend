@@ -4,6 +4,7 @@ import Project from "../db/Project";
 import { ITask, commentType } from "../types";
 import checkAdmin from "../middlewares/adminAuth";
 import { authUser, checkUser } from "../middlewares/userAuth";
+import { taskNotification } from "../notification";
 
 const router = Router();
 
@@ -30,6 +31,8 @@ router.route("/:taskId")
         try {
             const updatedTask = await Task.findByIdAndUpdate(id, req.body, { new: true })
             if (updatedTask) {
+                if (updatedTask.assignedTo)
+                    taskNotification(updatedTask.assignedTo)
                 return res.status(200).json({ msg: "Updated the task!" });
             } else {
                 return res.status(404).json({ msg: "Task not found!" });
