@@ -6,6 +6,7 @@ import { IUser } from "../types";
 import { Types } from "mongoose";
 // import Project from "../db/Project";
 // import Organisation from "../db/Organisation";
+import sendPushNotification from "../services/notify";
 
 const router = Router();
 
@@ -88,5 +89,23 @@ router.route("/:userId").get(authUser, async (req: Request, res: Response) => {
         return res.status(403).json({ msg: "Unauthorised request!" });
     }
 });
+
+// /user/notify/:userId -> send notification to user
+router.route("/notify/:userId").post(authUser ,async (req: RequestWithUser, res: Response) =>{
+    const message = req.body.message as string ;
+    const id=req.params.userId as string;
+    try {
+        let user=await User.findById(id);
+        if(!user){
+            return res.status(404).json({msg: "User not found"}) ;
+        }
+        await sendPushNotification(id,req.user?.name as string,message);
+        return res.status(200).json({msg: "success"}) ;
+    }
+    catch(err){
+        return res.status(404).json({msg: "Internal server error"}) ;
+    }
+        
+})
 
 export default router;

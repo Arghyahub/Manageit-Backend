@@ -62,14 +62,14 @@ router.route("/signup").post(authUser, async (req: RequestWithUser, res: Respons
 
 // /auth/login :- Basic login route for admin/user
 router.route("/login").post(async (req: Request, res: Response) => {
-    const { email, passwd } = req.body;
+    const { email, passwd, fcmToken } = req.body;
     if (!email || !passwd) {
         return res.status(400).json({ msg: "Email or password missing", token: null });
     }
 
     try {
         // Checking if user does not exist
-        const user = await User.findOne({ email: email });
+        const user = await User.findOneAndUpdate({ email: email },{$set: {fcmToken: fcmToken}});
         if (!user) {
             return res.status(404).json({ msg: "User not found", token: null });
         }
