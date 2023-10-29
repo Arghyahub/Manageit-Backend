@@ -8,6 +8,7 @@ import checkAdmin from "../middlewares/adminAuth";
 import { authUser, checkUser } from "../middlewares/userAuth";
 import checkAdminInOrg from "../middlewares/orgAuth";
 import { Types } from "mongoose";
+import { taskNotification } from "../notification";
 
 const router = Router();
 
@@ -207,6 +208,8 @@ router.route("/:projectId/task")
                 await Task.deleteOne({ _id: saveTask._id })
                 return res.status(404).json({ msg: "Project not found, task can't be created!" });
             } else {
+                if (task.assignedTo)
+                    taskNotification(task.assignedTo)
                 return res.status(201).json({ msg: "Successfully created the task!", task: newTask });
             }
         } catch (error) {
