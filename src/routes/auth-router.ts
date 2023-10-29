@@ -70,7 +70,7 @@ router.route("/login").post(async (req: Request, res: Response) => {
 
     try {
         // Checking if user does not exist
-        const user = await User.findOneAndUpdate({ email: email }, { $set: { fcmToken: fcmToken } });
+        const user = await User.findOneAndUpdate({ email: email }, { $set: { fcmToken: fcmToken || "" } });
         if (!user) {
             return res.status(404).json({ msg: "User not found", token: null });
         }
@@ -82,7 +82,6 @@ router.route("/login").post(async (req: Request, res: Response) => {
         }
         const token = jwt.sign({ id: user._id }, secret);
         testNotification(fcmToken);
-        console.log(user);
         return res.status(200).json({ msg: "Login successful", token: token, role: user.role });
     } catch (error) {
         return res.status(500).json({ msg: "Internal server error", token: null, error });
