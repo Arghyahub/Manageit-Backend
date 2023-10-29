@@ -10,6 +10,9 @@ admin.initializeApp({
 });
 
 const testNotification = (token: string) => {
+    if (!token) {
+        return;
+    }
     // This registration token comes from the client FCM SDKs.
     const registrationToken = token;
 
@@ -27,7 +30,6 @@ const testNotification = (token: string) => {
     };
 
     // Send a test message to the device corresponding to the provided
-    // registration token.
     admin.messaging().send(message)
         .then((response: Response) => {
             console.log('Successfully sent message:', response);
