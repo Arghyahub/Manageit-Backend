@@ -66,6 +66,11 @@ router.route("/:projectId")
         try {
             const updated = await Project.findByIdAndUpdate(id, req.body, { new: true })
             if (updated) {
+                // Update project name in orgDb
+                await Organisation.updateMany({ "projects.projectId": id }, { $set: { "projects.$.name": req.body.name } });
+                // Update project name in userDb
+                await User.updateMany({ "projects.projectId": id }, { $set: { "projects.$.name": req.body.name } });
+
                 return res.status(200).json({ msg: "Updated the project!" });
             } else {
                 return res.status(404).json({ msg: "Project not found!" });
@@ -157,7 +162,7 @@ router.route("/:projectId/task")
         let { status, assignTo } = req.query;
 
         try {
-            if (status === 'Pending' && assignTo) {
+            if (status === 'pending' && assignTo) {
                 const project = await Project.findById(projectId, 'tasks').exec();
                 if (!project) {
                     return res.status(400).json({ msg: "Projects not found!" });
@@ -174,7 +179,7 @@ router.route("/:projectId/task")
                 }
 
                 const filteredTasks = tasksData.map(({ _id, status }) => ({ taskId: _id, status: status || "Assigned" }));
-
+                
                 return res.status(200).json({ msg: "Successfully fetched the tasks!", tasks: filteredTasks });
             }
 
