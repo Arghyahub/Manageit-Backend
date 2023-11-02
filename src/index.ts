@@ -34,7 +34,7 @@ import { Server } from 'socket.io';
 const io = new Server(server, {
     pingTimeout: 120000,
     cors: {
-      origin: 'https://manageit-frontend.vercel.app',
+      origin: ['https://manageit-frontend.vercel.app', 'http://localhost:5173'],
     },
 });
 
