@@ -15,6 +15,10 @@ import userRoutes from "./routes/user-router";
 import taskRoutes from "./routes/task-router";
 import chatRoutes from "./routes/chat-router";
 
+app.get("/", (req, res) => {
+    res.send("Working!");
+})
+
 app.use("/auth", authRoutes)
 app.use("/project", projectRoutes);
 app.use("/org", orgRoutes);
@@ -34,25 +38,25 @@ import { Server } from 'socket.io';
 const io = new Server(server, {
     pingTimeout: 120000,
     cors: {
-      origin: ['https://manageit-frontend.vercel.app', 'http://localhost:5173'],
+        origin: ['https://manageit-frontend.vercel.app', 'http://localhost:5173'],
     },
 });
 
-io.on('connection', (socket)=> {
+io.on('connection', (socket) => {
     // socket.join('RootRoom') ;
     // console.log("User connected" + socket.id) ;
-    socket.on('join',(roomid)=> {
-        socket.join(roomid) ;
+    socket.on('join', (roomid) => {
+        socket.join(roomid);
     })
 
-    socket.on('new-chat',({recID, sender, msg}) => {
-        socket.to(recID).emit('recieved-msg',recID,sender,msg) ;
+    socket.on('new-chat', ({ recID, sender, msg }) => {
+        socket.to(recID).emit('recieved-msg', recID, sender, msg);
     })
 
-    socket.on('addFriends',(allUsers,roomId) => {
-        console.log(allUsers) ;
-        console.log(roomId) ;
-        socket.to('RootRoom').emit('joinRoom',allUsers,roomId) ;
+    socket.on('addFriends', (allUsers, roomId) => {
+        console.log(allUsers);
+        console.log(roomId);
+        socket.to('RootRoom').emit('joinRoom', allUsers, roomId);
     })
 })
 

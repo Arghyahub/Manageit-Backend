@@ -88,6 +88,9 @@ router.route("/:taskId/status").put(authUser, checkUser, async (req: Request, re
     try {
         const updatedTask = await Task.updateOne({ _id: id }, { $set: { status: req.body.status } });
         if (updatedTask) {
+            // Update Task in the Projectdb
+            await Project.updateOne({ _id: req.body.projectId, "tasks.taskId": id }, { $set: { "tasks.$.status": req.body.status } });
+
             return res.status(200).json({ msg: "Updated the task!" });
         } else {
             return res.status(404).json({ msg: "Task not found!" });
